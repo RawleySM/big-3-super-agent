@@ -109,6 +109,17 @@ graph TD
 
 ### Project Structure
 ```
+
+### Dual-Environment Orchestration (Windows + WSL)
+
+See [Dual-Environment Orchestration](docs/dual-environment-orchestration.md) for a full breakdown of the new production-grade platform. Highlights:
+
+- **Windows Edge** performs microphone capture, VAD, and realtime streaming to the OpenAI Realtime API with <300 ms first-token latency.
+- **WSL Gateway** runs a FastAPI service (`make dev`) that receives transcripts, maps intents into skill-based tasks, and coordinates dedicated coding and browser workers.
+- **Observability** includes Prometheus metrics (`/metrics`), JSONL trace logs convertible to SQLite (`make traces`), and per-job cost/token accounting.
+- **Extensibility** is handled via JSON skill definitions and pluggable queue/worker abstractions.
+
+Copy `.env.local.example` and `.env.wsl.example` to `.env.local` / `.env.wsl` respectively to configure credentials for each environment.
 big-3-super-agent/
 ├── .env.sample                 # Environment template
 ├── apps/
