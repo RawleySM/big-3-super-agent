@@ -11,10 +11,32 @@ A unified voice-controlled orchestrator that coordinates three types of AI agent
 2. **Claude Code Agentic Coder** - Software development and file operations
 3. **Gemini Browser Agent** - Web automation and validation
 
+## Dual-Environment Orchestration Platform
+
+The repository now ships with a production-ready split between a **Windows real-time edge** layer and a **WSL orchestration gateway**. The design keeps latency-sensitive audio capture and realtime streaming on Windows, while long-running coding/browser jobs execute inside WSL with full observability.
+
+### Windows Edge Runtime
+- Location: `apps/windows-edge/edge_client.py`
+- Responsibilities: microphone capture, WebRTC VAD, realtime streaming to OpenAI, structured logging, HTTP forwarding of transcript deltas to the gateway.
+- Configuration: `.env.local` (API key, ports, VAD tuning, trace path)
+- Run: `python edge_client.py` from an elevated PowerShell terminal with the `.env.local` file populated.
+
+### WSL Orchestration Gateway
+- Location: `apps/orchestrator`
+- FastAPI app exposing `/task`, `/status/{job_id}`, `/metrics`, `/traces`
+- Pluggable async job queue with in-memory backend and Redis-ready contract
+- Worker registry with coding and browser workers (Claude / Gemini integration points)
+- Unified trace writer (JSONL + optional SQLite) and Prometheus-style metrics
+- Configuration: `.env.wsl`
+- Run: `make setup && make dev`
+
+> 📘 See [`docs/dual_environment_architecture.md`](docs/dual_environment_architecture.md) for diagrams and detailed flow descriptions.
+
 ## Requirements
 
-- **Python 3.11+**
-- **[Astral uv](https://docs.astral.sh/uv/)** - Fast Python package installer and runner
+- **Python 3.11+** on both Windows (edge client) and WSL (gateway)
+- **Poetry** for orchestrator dependency management (`pipx install poetry`)
+- **[Astral uv](https://docs.astral.sh/uv/)** - optional for legacy realtime PoC app
 - **API Keys**: OpenAI, Anthropic (Claude), Google (Gemini)
 - **Playwright**: For browser automation (`playwright install` after setup)
 
@@ -25,12 +47,43 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ## Setup
 
-### 1. Clone and Navigate
+### 1. Configure Environment Files
+
+Populate the new dual-environment `.env` files at the repository root by editing `.env.local` (Windows edge) and `.env.wsl` (WSL gateway). Each file contains inline comments indicating the required values (API keys, ports, trace locations).
+
+### 2. WSL Gateway
+
+```bash
+make setup         # install orchestrator dependencies via Poetry
+make dev           # start FastAPI gateway with live reload
+```
+
+- `make lint` runs Ruff on the orchestrator source tree.
+- `make test` executes the FastAPI unit tests.
+- `make traces` prints the active trace log file.
+
+### 3. Windows Edge Runtime
+
+On the Windows host (outside WSL):
+
+```powershell
+cd apps\windows-edge
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install sounddevice webrtcvad websockets aiohttp python-dotenv structlog numpy
+python edge_client.py
+```
+
+The edge runtime automatically reconnects to the realtime API on transient network failures and forwards transcripts to the WSL gateway.
+
+### 4. Legacy Realtime PoC (Optional)
+
+The original proof-of-concept voice orchestrator remains available:
+
 ```bash
 cd apps/realtime-poc
 ```
 
-### 2. Configure Environment
 Copy `.env.sample` to `.env` and fill in required values:
 
 ```bash
