@@ -1,0 +1,17 @@
+[
+  {
+    "name": "coding",
+    "phrases": ["generate code", "update the repo", "refactor", "write tests"],
+    "worker": "coding"
+  },
+  {
+    "name": "browser",
+    "phrases": ["open", "browser", "validate", "scrape", "check website"],
+    "worker": "browser"
+  },
+  {
+    "name": "summarise",
+    "phrases": ["summarise", "summarize", "report"],
+    "worker": "coding"
+  }
+]
