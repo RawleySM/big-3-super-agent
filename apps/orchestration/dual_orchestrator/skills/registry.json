@@ -1,0 +1,20 @@
+[
+  {
+    "name": "coding",
+    "description": "Code generation, refactoring, and repository maintenance tasks",
+    "queue": "coding",
+    "keywords": ["code", "refactor", "implement", "bug", "write", "python", "typescript"]
+  },
+  {
+    "name": "browser",
+    "description": "Browser automation, validation, and data extraction",
+    "queue": "browser",
+    "keywords": ["browser", "website", "validate", "playwright", "gemini", "scrape", "screenshot"]
+  },
+  {
+    "name": "summarize",
+    "description": "Summarize transcripts, logs, and agent outputs",
+    "queue": "coding",
+    "keywords": ["summarize", "recap", "explain", "summary", "logs"]
+  }
+]
