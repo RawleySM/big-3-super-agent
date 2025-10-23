@@ -1,0 +1,7 @@
+sounddevice
+webrtcvad
+websockets
+httpx
+python-dotenv
+structlog
+numpy

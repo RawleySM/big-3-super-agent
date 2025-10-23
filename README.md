@@ -11,6 +11,52 @@ A unified voice-controlled orchestrator that coordinates three types of AI agent
 2. **Claude Code Agentic Coder** - Software development and file operations
 3. **Gemini Browser Agent** - Web automation and validation
 
+## Dual-Environment Orchestration Platform
+
+The repository now includes a production-grade orchestration stack that splits responsibilities
+between a latency-sensitive **Windows edge** process and a **WSL orchestration gateway**. This
+enables sub-300 ms first-token audio responses while fan-out tasks run asynchronously inside WSL
+workers.
+
+```mermaid
+flowchart LR
+    Mic[🎙️ Windows Microphone] --> EdgeVAD[Windows Edge
+    VAD + PCM Encoder]
+    EdgeVAD -->|20ms Frames| RealtimeAPI[OpenAI Realtime WS]
+    RealtimeAPI -->|Transcript Delta| EdgeRouter
+    EdgeRouter -->|localhost HTTP| Gateway[/FastAPI Orchestration Gateway/]
+    Gateway -->|Intent Router| Queue[(Job Queue)]
+    Queue --> ClaudeWorker[Claude Coding Worker]
+    Queue --> BrowserWorker[Gemini/Playwright Worker]
+    ClaudeWorker --> Repo[(Local Git Repo)]
+    BrowserWorker --> Web[Headless Browser]
+    ClaudeWorker --> TraceLog[(Unified Trace Log)]
+    BrowserWorker --> TraceLog
+    Gateway --> Prometheus[(Metrics)]
+    Gateway --> Datasette[(SQLite Traces)]
+```
+
+### Windows Edge
+
+- Captures microphone audio at 16 kHz PCM and performs voice activity detection.
+- Streams small frames directly to the OpenAI Realtime API with automatic recovery.
+- Parses transcript deltas and forwards them to WSL using non-blocking HTTP calls.
+- Emits structured logs and trace entries for latency analysis.
+
+### WSL Gateway
+
+- FastAPI server exposing `/task`, `/transcript`, `/status/{job_id}`, and `/metrics` endpoints.
+- Skill registry converts natural language into structured task specifications.
+- In-memory queue abstraction with worker processes for coding and browser automation (Redis-ready).
+- JSONL traces, Prometheus metrics, and optional SQLite persistence for Datasette exploration.
+
+### Getting Started
+
+1. Populate `.env.local` (Windows) and `.env.wsl` (WSL) with the appropriate API keys and paths.
+2. On Windows, install `apps/orchestration/windows_edge/requirements.txt` and run `python -m windows_edge.main`.
+3. Inside WSL, run `make setup` once, then `make dev` to start the orchestration gateway.
+4. Speak to the microphone—voice responses flow immediately while downstream jobs execute asynchronously.
+
 ## Requirements
 
 - **Python 3.11+**
